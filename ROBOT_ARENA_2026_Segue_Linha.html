@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROBOT ARENA 2026 | Simulador Oficial Segue Linha SEED-PR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #070b14;
+    --bg-panel: #0f172a;
+    --bg-card: #162033;
+    --bg-elevated: #1e293b;
+    --border-subtle: #283650;
+    --accent-cyan: #06b6d4;
+    --accent-blue: #3b82f6;
+    --accent-amber: #f59e0b;
+    --accent-emerald: #10b981;
+    --accent-rose: #f43f5e;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-dark);
+    background-image: 
+      radial-gradient(circle at 12% 18%, rgba(6, 182, 212, 0.09) 0%, transparent 45%),
+      radial-gradient(circle at 88% 82%, rgba(16, 185, 129, 0.07) 0%, transparent 45%),
+      linear-gradient(rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 34px 34px, 34px 34px;
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.6;
+  }
+
+  /* Header Bar */
+  header {
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0.9rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .brand-badge {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+    color: #021210;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+  }
+
+  .brand-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.22rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-primary);
+  }
+
+  .brand-sub {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    display: block;
+  }
+
+  .hud-stats {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+  }
+
+  .hud-pill {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    padding: 0.45rem 0.95rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+  }
+
+  .hud-pill .label {
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+  }
+
+  .hud-pill .val {
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+
+  .hud-pill.timer-warning {
+    border-color: var(--accent-rose);
+    background: rgba(244, 63, 94, 0.14);
+    animation: pulse-danger 1.2s infinite;
+  }
+
+  .hud-pill.timer-warning .val {
+    color: var(--accent-rose);
+  }
+
+  @keyframes pulse-danger {
+    0%, 100% { box-shadow: 0 0 0 rgba(244, 63, 94, 0); }
+    50% { box-shadow: 0 0 14px rgba(244, 63, 94, 0.45); }
+  }
+
+  /* Main Container */
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1050px;
+    margin: 2rem auto;
+    padding: 0 1.25rem;
+  }
+
+  .screen {
+    display: none;
+    animation: fadeIn 0.35s ease;
+  }
+
+  .screen.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Intro Card */
+  .hero-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-panel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald), var(--accent-amber));
+  }
+
+  .level-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: var(--accent-amber);
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 2.15rem;
+    line-height: 1.2;
+    margin-bottom: 0.85rem;
+    color: #fff;
+  }
+
+  .hero-desc {
+    color: var(--text-secondary);
+    font-size: 1.02rem;
+    max-width: 800px;
+    margin-bottom: 2rem;
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .spec-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 1.1rem;
+  }
+
+  .spec-box strong {
+    display: block;
+    font-family: 'Chakra Petch', sans-serif;
+    color: var(--accent-cyan);
+    font-size: 1.15rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .spec-box span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 0.45rem;
+  }
+
+  .input-group input, .input-group select {
+    width: 100%;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 0.75rem 0.95rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .input-group input:focus, .input-group select:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.18);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.9rem 1.8rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-emerald));
+    color: #021210;
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(6, 182, 212, 0.45);
+  }
+
+  .btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent-cyan);
+    background: #253349;
+  }
+
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Quiz Screen */
+  .progress-wrapper {
+    margin-bottom: 1.5rem;
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .domain-badge {
+    background: rgba(6, 182, 212, 0.16);
+    border: 1px solid rgba(6, 182, 212, 0.4);
+    color: #67e8f9;
+    padding: 0.25rem 0.7rem;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .difficulty-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  .diff-hard {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--accent-amber);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+  }
+
+  .diff-extreme {
+    background: rgba(244, 63, 94, 0.15);
+    color: var(--accent-rose);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-card);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+    width: 5%;
+    transition: width 0.35s ease;
+  }
+
+  .question-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .q-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .q-number {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+
+  .q-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+    line-height: 1.65;
+  }
+
+  .code-snippet {
+    background: #050811;
+    border: 1px solid #1e293b;
+    border-left: 3px solid var(--accent-emerald);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    overflow-x: auto;
+    margin-bottom: 1.4rem;
+    white-space: pre;
+    line-height: 1.5;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .option-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--bg-card);
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.96rem;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.95rem;
+    transition: all 0.18s ease;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent-cyan);
+    background: #1b2840;
+    transform: translateX(3px);
+  }
+
+  .option-letter {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent-cyan);
+  }
+
+  .option-btn.correct {
+    border-color: var(--accent-emerald);
+    background: rgba(16, 185, 129, 0.16);
+  }
+
+  .option-btn.correct .option-letter {
+    background: var(--accent-emerald);
+    color: #022c22;
+    border-color: var(--accent-emerald);
+  }
+
+  .option-btn.wrong {
+    border-color: var(--accent-rose);
+    background: rgba(244, 63, 94, 0.16);
+  }
+
+  .option-btn.wrong .option-letter {
+    background: var(--accent-rose);
+    color: #fff;
+    border-color: var(--accent-rose);
+  }
+
+  .option-btn:disabled {
+    cursor: default;
+  }
+
+  /* Feedback Box */
+  .feedback-box {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.4rem;
+    border-radius: 12px;
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .feedback-box.visible {
+    display: block;
+  }
+
+  .feedback-box.is-correct {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+  }
+
+  .feedback-box.is-wrong {
+    background: rgba(244, 63, 94, 0.1);
+    border: 1px solid rgba(244, 63, 94, 0.4);
+  }
+
+  .feedback-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .is-correct .feedback-title {
+    color: var(--accent-emerald);
+  }
+
+  .is-wrong .feedback-title {
+    color: var(--accent-rose);
+  }
+
+  .feedback-text {
+    font-size: 0.93rem;
+    color: #e2e8f0;
+    line-height: 1.6;
+  }
+
+  .feedback-source {
+    display: inline-block;
+    margin-top: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    background: rgba(15, 23, 42, 0.75);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  .quiz-actions {
+    margin-top: 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* Navigator Dots */
+  .q-nav-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .nav-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-dot.active {
+    border-color: var(--accent-cyan);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
+  }
+
+  .nav-dot.done-ok {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: var(--accent-emerald);
+    color: var(--accent-emerald);
+  }
+
+  .nav-dot.done-err {
+    background: rgba(244, 63, 94, 0.22);
+    border-color: var(--accent-rose);
+    color: var(--accent-rose);
+  }
+
+  /* Report Screen */
+  .report-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 2.25rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  }
+
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1.75rem;
+  }
+
+  .student-meta h2 {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.75rem;
+    color: #fff;
+    margin-bottom: 0.3rem;
+  }
+
+  .student-meta p {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+  }
+
+  .readiness-stamp {
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .stamp-approved {
+    background: rgba(16, 185, 129, 0.14);
+    border: 1.5px solid var(--accent-emerald);
+    color: var(--accent-emerald);
+  }
+
+  .stamp-warning {
+    background: rgba(245, 158, 11, 0.14);
+    border: 1.5px solid var(--accent-amber);
+    color: var(--accent-amber);
+  }
+
+  .stamp-rejected {
+    background: rgba(244, 63, 94, 0.14);
+    border: 1.5px solid var(--accent-rose);
+    color: var(--accent-rose);
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .kpi-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 1.2rem;
+    text-align: center;
+  }
+
+  .kpi-box .kpi-val {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: block;
+  }
+
+  .kpi-box .kpi-lbl {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  .domain-breakdown {
+    margin-bottom: 2rem;
+  }
+
+  .domain-breakdown h3, .review-section h3 {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+
+  .domain-bar-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .domain-bar-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.45rem;
+  }
+
+  .bar-bg {
+    height: 8px;
+    background: var(--bg-dark);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+
+  .review-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-left: 4px solid var(--border-subtle);
+    border-radius: 10px;
+    padding: 1.15rem;
+    margin-bottom: 1rem;
+  }
+
+  .review-item.rev-ok {
+    border-left-color: var(--accent-emerald);
+  }
+
+  .review-item.rev-err {
+    border-left-color: var(--accent-rose);
+  }
+
+  .review-q-title {
+    font-weight: 600;
+    font-size: 0.96rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-ans {
+    font-size: 0.86rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+  }
+
+  .review-exp {
+    font-size: 0.86rem;
+    color: #cbd5e1;
+    background: rgba(9, 13, 22, 0.65);
+    padding: 0.65rem 0.85rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+
+  .report-footer-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(39, 53, 79, 0.5);
+    margin-top: auto;
+  }
+
+  @media print {
+    body {
+      background: #fff !important;
+      color: #000 !important;
+    }
+    header, .report-footer-actions, footer {
+      display: none !important;
+    }
+    .report-card {
+      background: #fff !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      color: #000 !important;
+    }
+    .student-meta h2, .domain-breakdown h3, .review-section h3, .kpi-box .kpi-val {
+      color: #000 !important;
+    }
+    .kpi-box, .domain-bar-item, .review-item {
+      background: #f8fafc !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #000 !important;
+    }
+    .review-exp {
+      background: #f1f5f9 !important;
+      color: #1e293b !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-badge">ROBOT ARENA 2026</span>
+    <div>
+      <div class="brand-title">SALÃO DE ROBÓTICA PR // SEGUE LINHA</div>
+      <span class="brand-sub">Sistema Oficial de Homologação e Prontidão Técnica • SEED-PR</span>
+    </div>
+  </div>
+  <div class="hud-stats" id="hud-bar" style="display: none;">
+    <div class="hud-pill">
+      <span class="label">Questão</span>
+      <span class="val" id="hud-progress">01/20</span>
+    </div>
+    <div class="hud-pill">
+      <span class="label">Score</span>
+      <span class="val" id="hud-score">0 pts</span>
+    </div>
+    <div class="hud-pill" id="timer-pill">
+      <span class="label">Tempo</span>
+      <span class="val" id="hud-timer">30:00</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- TELA 1: CADASTRO E BRIEFING -->
+  <section id="screen-intro" class="screen active">
+    <div class="hero-panel">
+      <div class="level-tag">⚡ Nível: Difícil a Muito Difícil • Homologação de Pista</div>
+      <h1>ROBOT ARENA 2026 — Modalidade Robô Segue Linha</h1>
+      <p class="hero-desc">
+        Avaliação técnica de alta exigência baseada no <strong>Manual do Robô Segue Linha 2026</strong> e no <strong>Pontuador / Regras Oficiais SEED-PR</strong>. Testa o domínio real da equipe sobre montagem mecânica, geometria e calibração dos sensores IR, pinagem PWM da Ponte H L298N, lógica de programação C++ e cálculo oficial de pontuação de pista.
+      </p>
+
+      <div class="specs-grid">
+        <div class="spec-box">
+          <strong>20 Questões</strong>
+          <span>Diagnóstico de hardware, PWM, sensores IR, código C++ e regras de checkpoints</span>
+        </div>
+        <div class="spec-box">
+          <strong>30 Minutos</strong>
+          <span>Cronômetro regressivo oficial com encerramento automático</span>
+        </div>
+        <div class="spec-box">
+          <strong>Anti-Cola Ativo</strong>
+          <span>Embaralhamento dinâmico das alternativas a cada nova tentativa</span>
+        </div>
+        <div class="spec-box">
+          <strong>Laudo Técnico</strong>
+          <span>Diagnóstico por eixo de engenharia e relatório imprimível em PDF/TXT</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="input-group">
+          <label for="student-name">Nome Completo do(a) Estudante *</label>
+          <input type="text" id="student-name" placeholder="Ex.: Ana Clara Souza" required>
+        </div>
+        <div class="input-group">
+          <label for="team-name">Nome da Equipe / Robô *</label>
+          <input type="text" id="team-name" placeholder="Ex.: LineRunner PR / Equipe 04" required>
+        </div>
+        <div class="input-group">
+          <label for="student-role">Função Principal na Equipe</label>
+          <select id="student-role">
+            <option value="Programação C++, PWM & Lógica IR">Programação C++, PWM & Lógica IR</option>
+            <option value="Eletrônica, Ponte H & Calibração">Eletrônica, Ponte H & Calibração</option>
+            <option value="Mecânica, Chassi & Posicionamento">Mecânica, Chassi & Posicionamento</option>
+            <option value="Capitão / Estrategista de Pista">Capitão / Estrategista de Pista</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="startQuiz()">
+        Iniciar Homologação Segue Linha →
+      </button>
+    </div>
+  </section>
+
+  <!-- TELA 2: SIMULADOR -->
+  <section id="screen-quiz" class="screen">
+    <div class="q-nav-grid" id="q-nav-dots"></div>
+
+    <div class="progress-wrapper">
+      <div class="progress-meta">
+        <span id="q-domain-label" class="domain-badge">DOMÍNIO</span>
+        <span id="q-diff-label" class="difficulty-badge diff-hard">DIFÍCIL</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-header">
+        <span class="q-number" id="q-counter">QUESTÃO 01 DE 20</span>
+        <span style="font-size: 0.82rem; color: var(--text-muted);" id="q-points-tag">Valor: 50 pontos</span>
+      </div>
+
+      <div class="q-text" id="q-text"></div>
+      <div class="code-snippet" id="q-code" style="display: none;"></div>
+
+      <div class="options-list" id="options-container"></div>
+
+      <div class="feedback-box" id="feedback-box">
+        <div class="feedback-title" id="feedback-title"></div>
+        <div class="feedback-text" id="feedback-text"></div>
+        <div class="feedback-source" id="feedback-source"></div>
+      </div>
+
+      <div class="quiz-actions">
+        <span style="font-size: 0.84rem; color: var(--text-secondary);" id="action-hint">
+          Selecione uma alternativa para validar sua resposta.
+        </span>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" disabled>
+          Próxima Questão →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELA 3: RELATÓRIO INDIVIDUAL -->
+  <section id="screen-report" class="screen">
+    <div class="report-card">
+      <div class="report-header">
+        <div class="student-meta">
+          <div class="level-tag" style="margin-bottom: 0.5rem;">Laudo Oficial de Homologação • Segue Linha 2026</div>
+          <h2 id="rep-name">Estudante</h2>
+          <p id="rep-details">Equipe • Função • Data</p>
+        </div>
+        <div class="readiness-stamp" id="rep-stamp">
+          STATUS
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-box">
+          <span class="kpi-val" id="rep-score">0</span>
+          <span class="kpi-lbl">Pontuação Total (Máx. 1000)</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-val" id="rep-accuracy">0%</span>
+          <span class="kpi-lbl">Aproveitamento</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-val" id="rep-hits">0/20</span>
+          <span class="kpi-lbl">Acertos Técnicos</span>
+        </div>
+        <div class="kpi-box">
+          <span class="kpi-val" id="rep-time">00:00</span>
+          <span class="kpi-lbl">Tempo Utilizado</span>
+        </div>
+      </div>
+
+      <div class="domain-breakdown">
+        <h3>Diagnóstico de Competências por Eixo Técnico</h3>
+        <div id="domain-bars"></div>
+      </div>
+
+      <div class="review-section">
+        <h3>Auditoria Comentada das 20 Questões</h3>
+        <div id="review-list"></div>
+      </div>
+
+      <div class="report-footer-actions">
+        <button class="btn btn-primary" onclick="window.print()">
+          🖨️ Imprimir / Salvar Relatório em PDF
+        </button>
+        <button class="btn btn-secondary" onclick="exportReportTxt()">
+          📄 Baixar Laudo (.TXT) para Entrega
+        </button>
+        <button class="btn btn-secondary" onclick="location.reload()">
+          🔄 Nova Tentativa (Embaralhar)
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  ROBOT ARENA 2026 • Salão de Robótica PR • Baseado no Manual do Robô Segue Linha 2026 e Pontuador Oficial SEED-PR
+</footer>
+
+<script>
+const QUESTIONS_DB = [
+  {
+    id: 1,
+    domain: "Pinagem & Hardware PWM",
+    difficulty: "DIFÍCIL",
+    text: "Diferente de robôs de tração simples que mantêm os jumpers originais nos pinos Enable da Ponte H L298N, o Manual do Robô Segue Linha 2026 exige controle de velocidade via PWM. De acordo com a tabela oficial de ligações da Etapa 2.2, qual é o mapeamento exato entre a Ponte H L298N e os pinos digitais do Arduino Uno?",
+    options: [
+      { text: "IN1 → D9, IN2 → D8, IN3 → D7, IN4 → D6, ENA → D10 (PWM) e ENB → D5 (PWM).", correct: true },
+      { text: "IN1 → D8, IN2 → D7, IN3 → D5, IN4 → D4, ENA → D9 (PWM) e ENB → D6 (PWM).", correct: false },
+      { text: "IN1 → D10, IN2 → D9, IN3 → D6, IN4 → D5, ENA → D8 e ENB → D7.", correct: false },
+      { text: "IN1 → D2, IN2 → D3, IN3 → D4, IN4 → D5, ENA → A0 e ENB → A1.", correct: false }
+    ],
+    explanation: "Na Etapa 2.2 (e reforçado na Etapa 2.8 e 3.1) do Manual do Robô Segue Linha 2026, a pinagem oficial é: IN1→D9, IN2→D8, IN3→D7, IN4→D6, com os pinos de habilitação de potência ligados às portas PWM D10 (ENA) e D5 (ENB).",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 2.2 (Página 03)"
+  },
+  {
+    id: 2,
+    domain: "Sensores IR & Geometria",
+    difficulty: "DIFÍCIL",
+    text: "Na Etapa 1.7 ('Posicionamento dos Sensores IR'), o Manual estabelece parâmetros geométricos rigorosos para a instalação dos dois módulos infravermelhos na parte frontal do chassi. Qual configuração abaixo atende integralmente às especificações do manual?",
+    options: [
+      { text: "Altura de 5 a 10 mm acima do solo, ambos nivelados na mesma altura, centralizados no robô e espaçados entre si por aproximadamente 2 a 4 cm.", correct: true },
+      { text: "Altura de 2 a 4 cm acima do solo, com inclinação de 45 graus para frente e afastados 10 cm nas extremidades laterais do chassi.", correct: false },
+      { text: "Encostados diretamente na pista (0 mm) com 1 cm de distância entre si para evitar qualquer interferência de luz ambiente.", correct: false },
+      { text: "Altura de 15 a 20 mm do solo, posicionados atrás das rodas motrizes para corrigir a derrapagem traseira nas curvas fechadas.", correct: false }
+    ],
+    explanation: "A Etapa 1.7 determina: altura aproximada de 5 a 10 mm acima do solo (sem encostar na pista), ambos na mesma altura, centralizados em relação ao robô e com distância aproximada de 2 a 4 cm entre os dois sensores.",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 1.7 (Página 02)"
+  },
+  {
+    id: 3,
+    domain: "Sensores IR & Calibração",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Durante os treinos no ginásio oficial antes do Round 1, uma equipe percebe que seu robô, que funcionava perfeitamente na sala maker da escola, passa a ignorar a linha preta ou parar aleatoriamente sobre o piso branco. Analisando a Etapa 2.7 ('Ajustando os Sensores IR'), qual é a causa técnica e o procedimento obrigatório para solucionar o problema?",
+    options: [
+      { text: "A variação na iluminação ambiente altera o limiar de reflexão infravermelha captado pelo fototransistor; é obrigatório recalibrar o potenciômetro (trimpot) de cada sensor na própria pista oficial alternando entre o branco e a linha preta até o LED indicador comutar corretamente.", correct: true },
+      { text: "O regulador de 5 V do Arduino altera a tensão de referência digital conforme a temperatura do ginásio; deve-se inverter os pinos D2 e D3 no código.", correct: false },
+      { text: "A reflexão infravermelha é maior sobre a superfície preta fosca do que sobre o piso branco brilhante, exigindo trocar a alimentação VCC dos sensores de 5 V para o pino VIN.", correct: false },
+      { text: "Os sensores IR digitais perdem a memória de calibração toda vez que as baterias 18650 são desconectadas, sendo necessário regravar o código via USB antes de cada round.", correct: false }
+    ],
+    explanation: "A Etapa 2.7 alerta explicitamente: 'Faça a calibração utilizando a mesma pista e as mesmas condições de iluminação em que o robô será utilizado, pois mudanças na luz ambiente podem afetar a leitura dos sensores', ajustando lentamente o potenciômetro até o LED alternar entre o branco e o preto.",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 2.7 (Página 04)"
+  },
+  {
+    id: 4,
+    domain: "Lógica de Controle & Trajetória",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Considere um robô seguidor de linha montado com dois sensores IR digitais (Sensor Esquerdo em D2, Sensor Direito em D3) posicionados lado a lado com 3 cm de espaçamento, cavalgando uma linha preta central (ou seja, em reta normal, ambos os sensores ficam sobre o piso branco nas laterais da linha). De acordo com os Requisitos do Programa (Etapa 3.1), qual deve ser a reação exata do robô para cada combinação de leitura?",
+    options: [
+      { text: "Ambos no branco → seguir em frente; apenas sensor esquerdo no preto → corrigir girando para a esquerda; apenas sensor direito no preto → corrigir girando para a direita; ambos no preto simultaneamente → parar completamente.", correct: true },
+      { text: "Ambos no branco → parar completamente; apenas sensor esquerdo no preto → girar para a direita; apenas sensor direito no preto → girar para a esquerda; ambos no preto → acelerar em potência máxima.", correct: false },
+      { text: "Ambos no branco → girar em círculo buscando a linha; apenas sensor esquerdo no preto → seguir em frente; ambos no preto → acionar marcha ré por 5 segundos.", correct: false },
+      { text: "Apenas sensor esquerdo no preto → reduzir ambos os motores para PWM 50; apenas sensor direito no preto → desligar apenas o motor esquerdo e manter o direito em PWM 255.", correct: false }
+    ],
+    explanation: "Na Etapa 3.1 (Requisitos do Programa, p. 07), a tabela lógica oficial estabelece: (1) ambos detectam branco → seguir em frente; (2) apenas esquerdo detecta preto → girar para a esquerda; (3) apenas direito detecta preto → girar para a direita; (4) ambos detectam preto simultaneamente (marca de parada/chegada) → parar completamente.",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 3.1 (Página 07)"
+  },
+  {
+    id: 5,
+    domain: "Programação C++ & PWM",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Analise o código abaixo escrito por um estudante para controlar a velocidade e o sentido do robô Segue Linha. Apesar de a pinagem seguir exatamente a Etapa 2.2 (IN1=9, IN2=8, IN3=7, IN4=6, ENA=10, ENB=5), o robô NÃO se move na pista quando energizado. Qual é a falha técnica crítica no código?",
+    code: `const int IN1 = 9, IN2 = 8, IN3 = 7, IN4 = 6;
+const int ENA = 10, ENB = 5;
+
+void setup() {
+  pinMode(IN1, OUTPUT); pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT); pinMode(IN4, OUTPUT);
+  pinMode(ENA, OUTPUT); pinMode(ENB, OUTPUT);
+}
+
+void frente() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+}
+
+void loop() {
+  frente();
+}`,
+    options: [
+      { text: "Os pinos ENA (D10) e ENB (D5) foram configurados como OUTPUT, mas nunca receberam sinal PWM via analogWrite(ENA, velocidade) ou digitalWrite(ENA, HIGH), permanecendo em nível lógico LOW (0 V) e mantendo a Ponte H desabilitada.", correct: true },
+      { text: "As portas D10 e D5 do Arduino Uno não possuem hardware PWM compatível com a Ponte H L298N, exigindo o uso das portas D2 e D3.", correct: false },
+      { text: "O comando digitalWrite(IN1, HIGH) entra em conflito com o timer interno do pino D9 quando o pino D10 está declarado como const int.", correct: false },
+      { text: "A função frente() precisa retornar um valor booleano (bool frente()) para que o loop() consiga acionar os transistores da Ponte H.", correct: false }
+    ],
+    explanation: "Como os jumpers de ENA e ENB foram removidos para conectar D10 e D5 (Etapa 2.2), a Ponte H L298N só libera corrente para os motores quando ENA e ENB recebem um sinal PWM (ex.: analogWrite(ENA, 160); analogWrite(ENB, 160);). Sem isso, ENA e ENB ficam em LOW e os motores permanecem inertes.",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 2.2 e 3.1"
+  },
+  {
+    id: 6,
+    domain: "Regras & Pontuador SEED-PR",
+    difficulty: "DIFÍCIL",
+    text: "Analise a ficha oficial 'PONTUADOR SEGUE LINHA SEED-PR' (Páginas 1 e 2 do documento de regras). Uma equipe realiza um round com Saída Válida, supera o Checkpoint 1 na 2ª tentativa, o Checkpoint 2 na 1ª tentativa, o Checkpoint 3 na 3ª tentativa, para por 5 segundos na Chegada e conclui o percurso com o cronômetro marcando 34 segundos. Qual será a pontuação final exata dessa equipe neste round?",
+    options: [
+      { text: "180 pontos (10 da Saída + 20 do CP1 + 40 do CP2 + 30 do CP3 + 50 da Chegada + 30 do Bônus abaixo de 40s).", correct: true },
+      { text: "200 pontos (10 da Saída + 30 do CP1 + 40 do CP2 + 30 do CP3 + 50 da Chegada + 40 do Bônus de tempo).", correct: false },
+      { text: "150 pontos (10 da Saída + 20 do CP1 + 40 do CP2 + 30 do CP3 + 50 da Chegada + 0 de Bônus, pois o bônus só vale abaixo de 20s).", correct: false },
+      { text: "190 pontos (10 da Saída + 20 do CP1 + 40 do CP2 + 40 do CP3 + 50 da Chegada + 30 do Bônus abaixo de 40s).", correct: false }
+    ],
+    explanation: "Pela tabela oficial do Pontuador: Saída válida (+10) + CP1 2ª tentativa (+20) + CP2 1ª tentativa (+40) + CP3 3ª tentativa (+30) + Chegada parou 5s (+50) + Bônus de tempo abaixo de 40 seg (+30) = 10 + 20 + 40 + 30 + 50 + 30 = 180 pontos.",
+    source: "Pontuador e Regras do Torneio Segue Linha SEED-PR — Páginas 1 e 2"
+  },
+  {
+    id: 7,
+    domain: "Regras & Pontuador SEED-PR",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Considerando a lógica progressiva do Pontuador Segue Linha SEED-PR, qual é a pontuação máxima teórica de um percurso perfeito e quais são os pesos exatos de cada etapa quando superadas na 1ª tentativa?",
+    options: [
+      { text: "230 pontos: Saída válida (10) + Checkpoint 1 (30) + Checkpoint 2 (40) + Checkpoint 3 (50) + Chegada com parada de 5s (50) + Bônus abaixo de 20 segundos (50).", correct: true },
+      { text: "250 pontos: Saída válida (20) + Checkpoint 1 (30) + Checkpoint 2 (40) + Checkpoint 3 (50) + Chegada (60) + Bônus abaixo de 20 segundos (50).", correct: false },
+      { text: "200 pontos: Saída válida (10) + Checkpoint 1 (30) + Checkpoint 2 (30) + Checkpoint 3 (30) + Chegada (50) + Bônus abaixo de 20 segundos (50).", correct: false },
+      { text: "210 pontos: Saída válida (10) + Checkpoint 1 (30) + Checkpoint 2 (40) + Checkpoint 3 (50) + Chegada (50) + Bônus abaixo de 40 segundos (30).", correct: false }
+    ],
+    explanation: "Conforme explicitado na página 2 das Regras do Torneio Segue Linha SEED-PR: Saída (10) + Checkpoint 1 (30) + Checkpoint 2 (40) + Checkpoint 3 (50) + Chegada parando 5 segundos (50) + Bônus abaixo de 20 seg (50) = 230 pontos.",
+    source: "Regras do Torneio Segue Linha SEED-PR — Página 2"
+  },
+  {
+    id: 8,
+    domain: "Regras & Estratégia de Prova",
+    difficulty: "DIFÍCIL",
+    text: "No Pontuador Segue Linha SEED-PR, cada checkpoint possui até 3 tentativas, com pontuação decrescente a cada falha (ex.: Checkpoint 2 vale 40 pts na 1ª, 30 pts na 2ª e 20 pts na 3ª tentativa). Se um robô sair da linha após o Checkpoint 2, falhar as 3 tentativas de superar o Checkpoint 3 (recebendo 'Não Concluiu = 0 pontos' no CP3), mas a equipe reposicioná-lo e ele conseguir completar a Chegada parando por 5 segundos em 38 segundos totais, como o sistema de pontuação trata esse cenário?",
+    options: [
+      { text: "A pontuação é cumulativa por etapa: o robô perde apenas os pontos do Checkpoint 3 (0 pts), mas soma os pontos já conquistados na Saída, CP1, CP2, Chegada (+50 pts) e o bônus abaixo de 40s (+30 pts), além de poder disputar até 3 Rounds no torneio.", correct: true },
+      { text: "Falhar as 3 tentativas em qualquer checkpoint desclassifica imediatamente o robô do round inteiro, zerando toda a ficha de pontuação.", correct: false },
+      { text: "O robô só pode tentar o Checkpoint 3 se tiver passado pelos Checkpoints 1 e 2 obrigatoriamente na 1ª tentativa.", correct: false },
+      { text: "O bônus de tempo abaixo de 40 segundos (+30 pts) é dobrado para +60 pts se o robô tiver utilizado 3 tentativas em um checkpoint.", correct: false }
+    ],
+    explanation: "A regra explica: 'o robô acumula pontos conforme avança pela pista... Se não conseguir, recebe 0 ponto naquele checkpoint.' Além disso, o cabeçalho do Pontuador prevê a seleção de Round 1, Round 2 e Round 3.",
+    source: "Pontuador e Regras do Torneio Segue Linha SEED-PR — Páginas 1 e 2"
+  },
+  {
+    id: 9,
+    domain: "Programação C++ & Sensores IR",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Os módulos sensores IR reflexivos digitais (como o TCRT5000 com comparador LM393 utilizado no kit) possuem lógica invertida em relação ao que muitos iniciantes imaginam: sobre superfície branca (alta reflexão infravermelha), a saída digital D0 entrega nível lógico LOW (0); sobre a linha preta (absorção da luz IR), a saída D0 entrega nível lógico HIGH (1). Analise o trecho de código abaixo e identifique o erro de comportamento na pista:",
+    code: `int esq = digitalRead(2); // Sensor Esquerdo
+int dir = digitalRead(3); // Sensor Direito
+
+if (esq == HIGH && dir == HIGH) {
+  seguirFrente();
+} else if (esq == LOW && dir == HIGH) {
+  virarEsquerda();
+} else if (esq == HIGH && dir == LOW) {
+  virarDireita();
+} else {
+  pararRobo();
+}`,
+    options: [
+      { text: "A lógica está completamente invertida para sensores IR padrão (HIGH=Preto, LOW=Branco): o robô vai parar quando ambos estiverem no branco (pista normal), avançar quando ambos cruzarem a linha preta de chegada e virar para o lado oposto ao erro na curva.", correct: true },
+      { text: "O código funciona perfeitamente para sensores IR digitais, pois digitalRead() converte automaticamente HIGH em superfície branca.", correct: false },
+      { text: "Os pinos D2 e D3 do Arduino Uno não aceitam leitura com digitalRead() quando os pinos D9 e D10 estão operando em PWM.", correct: false },
+      { text: "A estrutura else if impede que o robô execute pararRobo() caso apenas um dos sensores falhe eletricamente.", correct: false }
+    ],
+    explanation: "Como o sensor IR emite HIGH (1) no preto e LOW (0) no branco, a condição de seguir em frente (ambos no branco) deve ser (esq == LOW && dir == LOW), e parar (ambos no preto) deve ser (esq == HIGH && dir == HIGH). No código apresentado, o robô pararia na reta e aceleraria na faixa de chegada!",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 2.5, 2.7 e 3.1"
+  },
+  {
+    id: 10,
+    domain: "Eletrônica & Alimentação",
+    difficulty: "DIFÍCIL",
+    text: "Na Etapa 2.5 ('Conectando os Sensores IR ao Arduino'), o Manual orienta ligar os pinos VCC dos dois sensores IR ao pino 5V do Arduino e os pinos GND ao GND (sugerindo o uso de uma mini protoboard), enquanto na Etapa 2.4 o Arduino é alimentado pelo borne 5V da Ponte H conectado ao pino VIN. Qual cuidado elétrico é fundamental ao compartilhar a linha de 5V com os sensores IR?",
+    options: [
+      { text: "Garantir que o terra (GND) da bateria, da Ponte H, do Arduino Uno e dos dois sensores IR estejam todos interligados (referência comum), caso contrário a leitura digital nos pinos D2 e D3 será flutuante e errática.", correct: true },
+      { text: "Alimentar os sensores IR diretamente pelo borne +12V da Ponte H para aumentar o alcance do LED emissor infravermelho até 15 cm.", correct: false },
+      { text: "Conectar os pinos D0 dos sensores IR aos pinos analógicos A4 e A5 para evitar sobrecarga de corrente no regulador 5V do Arduino.", correct: false },
+      { text: "Remover o jumper 5V-EN da Ponte H sempre que utilizar a protoboard para distribuir 5 V aos sensores infravermelhos.", correct: false }
+    ],
+    explanation: "Em qualquer sistema embarcado com múltiplas placas (Ponte H L298N, Arduino Uno e módulos IR), a referência de tensão (GND) deve ser rigorosamente comum para que os níveis lógicos HIGH/LOW dos sensores (D2/D3) e dos sinais PWM (D5/D10) sejam interpretados sem ruído ou flutuação.",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 2.3, 2.4 e 2.5"
+  },
+  {
+    id: 11,
+    domain: "Engenharia de Controle & Velocidade",
+    difficulty: "DIFÍCIL",
+    text: "Nas Dicas para um Robô Seguidor de Linha em Torneio (Página 07), o Manual destaca: 'Utilize uma velocidade compatível com a pista; robôs muito rápidos podem perder a linha nas curvas.' Por que o controle via PWM nos pinos ENA (D10) e ENB (D5) resolve esse problema e qual é a faixa válida de valores na função analogWrite(pino, valor)?",
+    options: [
+      { text: "analogWrite() aceita valores inteiros de 0 a 255 (ciclo de trabalho de 0% a 100%), permitindo reduzir a tensão média nos motores (ex.: PWM entre 130 e 180) para que os sensores em D2/D3 tenham tempo de leitura antes que o chassi ultrapasse a linha por inércia.", correct: true },
+      { text: "analogWrite() aceita valores de 0 a 1023 e reduz a frequência do cristal do Arduino de 16 MHz para 1 MHz nas curvas.", correct: false },
+      { text: "O PWM nos pinos D10 e D5 atua invertendo a polaridade dos motores a cada milissegundo para frear o robô sem alterar a velocidade média.", correct: false },
+      { text: "Apenas valores múltiplos de 50 (50, 100, 150, 200, 250) são reconhecidos pela Ponte H L298N sem causar superaquecimento.", correct: false }
+    ],
+    explanation: "A função analogWrite() do Arduino Uno possui resolução de 8 bits (0 a 255). Reduzir o duty cycle nos pinos ENA (D10) e ENB (D5) limita a velocidade linear do robô, evitando que a inércia faça os sensores cruzarem toda a largura da linha preta em curvas fechadas antes da resposta do loop().",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 2.2 e Dicas de Torneio (Página 07)"
+  },
+  {
+    id: 12,
+    domain: "Programação C++ & Estratégia de Curva",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Quando apenas o sensor esquerdo detecta a linha preta (o robô está derivando para a direita em relação à linha, exigindo uma correção para a esquerda), existem duas estratégias de acionamento dos motores na Ponte H: 'curva suave' (reduzir/parar apenas o motor esquerdo e manter o direito girando para frente) ou 'pivô/giro no eixo' (motor esquerdo em ré e motor direito para frente). Qual combinação de estados nos pinos IN1(D9), IN2(D8), IN3(D7) e IN4(D6) realiza um giro em pivô para a ESQUERDA (considerando Motor Esquerdo em OUT1/OUT2 e Motor Direito em OUT3/OUT4, onde IN1=HIGH/IN2=LOW e IN3=HIGH/IN4=LOW fazem ambos avançarem)?",
+    options: [
+      { text: "IN1 = LOW, IN2 = HIGH (motor esquerdo gira para trás) e IN3 = HIGH, IN4 = LOW (motor direito gira para frente).", correct: true },
+      { text: "IN1 = HIGH, IN2 = LOW (motor esquerdo gira para frente) e IN3 = LOW, IN4 = HIGH (motor direito gira para trás).", correct: false },
+      { text: "IN1 = HIGH, IN2 = HIGH (freio no esquerdo) e IN3 = LOW, IN4 = LOW (roda livre no direito).", correct: false },
+      { text: "IN1 = LOW, IN2 = LOW e IN3 = HIGH, IN4 = HIGH, invertendo ENA e ENB para 0.", correct: false }
+    ],
+    explanation: "Para girar o chassi rapidamente para a esquerda em torno de seu eixo central, o motor esquerdo (OUT1/OUT2, controlado por IN1/IN2) deve inverter seu sentido para trás (IN1=LOW, IN2=HIGH), enquanto o motor direito (OUT3/OUT4, controlado por IN3/IN4) continua impulsionando para frente (IN3=HIGH, IN4=LOW).",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 2.1, 2.2 e 3.1"
+  },
+  {
+    id: 13,
+    domain: "Engenharia de Prompts & Boas Práticas",
+    difficulty: "DIFÍCIL",
+    text: "Na Etapa 03 (Seção 3.1, Página 07), o Manual exige que o prompt enviado à Inteligência Artificial inclua restrições rigorosas de qualidade de código. Qual par de regras de engenharia de software está explicitamente exigido no prompt oficial do Manual?",
+    options: [
+      { text: "'Crie constantes para todos os pinos utilizados' e 'Evite utilizar números diretamente no código' (além de organizar o código em funções e comentar todas as partes importantes).", correct: true },
+      { text: "'Utilize apenas variáveis globais do tipo String' e 'Escreva toda a lógica dentro do void setup() sem usar funções auxiliares'.", correct: false },
+      { text: "'Substitua digitalWrite() por manipulação direta de registradores PORTD/PORTB' e 'Omita comentários para reduzir o tamanho do arquivo .ino'.", correct: false },
+      { text: "'Use a biblioteca PID_v1.h' e 'Fixe todos os pinos em valores numéricos literais dentro das funções de movimento'.", correct: false }
+    ],
+    explanation: "Na página 07 do Manual, os requisitos explícitos do prompt incluem: 'Organize o código utilizando funções para facilitar a leitura', 'Comente todas as partes importantes do programa', 'Crie constantes para todos os pinos utilizados' e 'Evite utilizar números diretamente no código' (evitando os chamados 'magic numbers').",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 3.1 (Página 07)"
+  },
+  {
+    id: 14,
+    domain: "Hardware & Diagnóstico de Montagem",
+    difficulty: "DIFÍCIL",
+    text: "Após finalizar a montagem elétrica (Etapa 2.8), um aluno liga a bateria e testa o robô na pista. Em linha reta ele avança perfeitamente, mas toda vez que o sensor esquerdo toca a linha preta, o robô vira bruscamente para a DIREITA e sai completamente da pista. Os pinos D2 (esquerdo) e D3 (direito) estão corretos no código. Qual é a causa física mais provável desse comportamento?",
+    options: [
+      { text: "Os fios dos sensores IR foram trocados fisicamente entre D2 e D3 (sensor esquerdo ligado no D3 e sensor direito no D2) OU os motores foram conectados invertidos nos canais da Ponte H (motor esquerdo em OUT3/OUT4 e direito em OUT1/OUT2).", correct: true },
+      { text: "O potenciômetro do sensor esquerdo está ajustado com sensibilidade maior que o do sensor direito.", correct: false },
+      { text: "As baterias 18650 estão com tensão de 8,4 V em vez de 7,4 V, fazendo o PWM de D10 operar invertido.", correct: false },
+      { text: "A roda boba está posicionada na parte traseira do chassi em vez da parte frontal.", correct: false }
+    ],
+    explanation: "Se o robô anda reto normalmente (portanto ambos os motores giram para frente), mas vira sempre para o lado oposto ao da correção necessária, houve inversão cruzada entre os sensores (D2 ↔ D3) ou entre os canais esquerdo/direito dos motores na Ponte H (OUT1/2 ↔ OUT3/4).",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 2.1, 2.5 e 2.8"
+  },
+  {
+    id: 15,
+    domain: "Mecânica & Dinâmica de Pista",
+    difficulty: "DIFÍCIL",
+    text: "Analisando as instruções de montagem mecânica (Etapas 1.1 a 1.6) e as Dicas de Torneio (Página 07), por que a distribuição equilibrada do peso (suporte de baterias 18650) e o alinhamento das duas rodas motrizes são críticos especificamente na modalidade Segue Linha?",
+    options: [
+      { text: "Porque rodas desalinhadas ou peso mal distribuído geram tendência de desvio lateral mesmo com PWM idêntico nos dois motores, exigindo correções constantes dos sensores IR que reduzem a velocidade média e aumentam o risco de perder o bônus de tempo (< 20s ou < 40s).", correct: true },
+      { text: "Porque o regulamento exige que o centro de gravidade fique exatamente a 15 cm de altura acima do chassi 2WD.", correct: false },
+      { text: "Porque o peso desequilibrado altera a frequência de emissão infravermelha dos LEDs dos sensores D2 e D3.", correct: false },
+      { text: "Porque se a roda boba não suportar 80% do peso do robô, os motores DC queimam por falta de atrito.", correct: false }
+    ],
+    explanation: "Se o chassi tende mecanicamente a puxar para um lado por desalinhamento de rodas ou centro de massa deslocado, o robô oscila ('zigue-zague') na reta, perdendo segundos preciosos para os bônus de tempo (<20s = +50 pts; <40s = +30 pts) e arriscando escapar nas curvas.",
+    source: "Manual do Robô Segue Linha 2026 (Etapas 1.2, 1.4, Dicas) e Regras SEED-PR"
+  },
+  {
+    id: 16,
+    domain: "Eletrônica & Segurança",
+    difficulty: "DIFÍCIL",
+    text: "Durante a Conferência Final (Etapa 2.8, Página 05), o Manual lista 16 itens de verificação antes de conectar a bateria e 3 'Observações Importantes'. Qual procedimento durante a manutenção rápida entre os Rounds 1 e 2 viola diretamente as normas de segurança do Manual?",
+    options: [
+      { text: "Desconectar e reconectar o jumper do pino D10 (ENA) ou do sensor IR D2 com o suporte das baterias 18650 ainda conectado à Ponte H.", correct: true },
+      { text: "Usar abraçadeiras plásticas (enforca-gato) para prender os cabos dos sensores IR longe das rodas motrizes.", correct: false },
+      { text: "Medir a tensão das baterias 18650 antes do round e substituí-las por um par totalmente carregado.", correct: false },
+      { text: "Conectar o cabo USB ao Arduino Uno para ajustar o valor de velocidade PWM no código após desconectar a bateria.", correct: false }
+    ],
+    explanation: "A primeira 'Observação Importante' da Etapa 2.8 (Página 05) é categórica: 'Nunca conecte ou desconecte fios com a bateria ligada.' Um jumper solto energizado pode encostar no chassi ou em outro pino e queimar a Ponte H ou o Arduino.",
+    source: "Manual do Robô Segue Linha 2026 — Etapa 2.8 (Página 05)"
+  },
+  {
+    id: 17,
+    domain: "Programação C++ & Parada na Chegada",
+    difficulty: "MUITO DIFÍCIL",
+    text: "No Pontuador Segue Linha SEED-PR, a etapa 'Chegada' exige a condição: 'Parou 5 segundos (+50 Pontos)'. No Manual (Etapa 3.1), especifica-se: 'Quando os dois sensores detectarem preto simultaneamente, o robô deve parar completamente.' Se a pista possuir uma faixa transversal preta na linha de chegada, qual problema ocorre se o código apenas desligar os motores sem tratar o tempo ou uma trava de estado (flag)?",
+    code: `if (esq == PRETO && dir == PRETO) {
+  analogWrite(ENA, 0);
+  analogWrite(ENB, 0);
+  digitalWrite(IN1, LOW); digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW); digitalWrite(IN4, LOW);
+}`,
+    options: [
+      { text: "Se o robô estiver em alta velocidade e ultrapassar a faixa preta de chegada por inércia antes de frear totalmente, no ciclo seguinte do loop() ambos os sensores voltarão a ler BRANCO e o robô voltará a acelerar, perdendo os +50 pontos da parada de 5 segundos!", correct: true },
+      { text: "O comando analogWrite(ENA, 0) reinicia o cronômetro interno millis() do Arduino Uno, fazendo o robô dar marcha ré automaticamente após 2 segundos.", correct: false },
+      { text: "A Ponte H L298N ignora analogWrite(ENA, 0) se os pinos IN1 a IN4 estiverem em LOW, mantendo os motores girando a 50% da potência.", correct: false },
+      { text: "Detectar preto simultaneamente nos pinos D2 e D3 gera uma interrupção de hardware que apaga o programa da memória Flash do Arduino.", correct: false }
+    ],
+    explanation: "Esse é um erro clássico de competição: se o robô embalar e passar por cima da faixa preta de chegada (voltando a ler branco logo à frente), um loop simples sem trava de chegada (ex.: while(true); ou uma variável booleana chegou = true;) fará o robô arrancar novamente, invalidando a parada obrigatória de 5 segundos (+50 pontos).",
+    source: "Manual Segue Linha 2026 (Etapa 3.1) & Pontuador SEED-PR (Chegada)"
+  },
+  {
+    id: 18,
+    domain: "Sensores IR & Pista",
+    difficulty: "MUITO DIFÍCIL",
+    text: "Sabendo que o Manual recomenda uma distância de 2 a 4 cm entre os dois sensores IR (Etapa 1.7), considere uma pista oficial cuja linha preta tem largura padrão de ~1,8 cm a 2,0 cm. O que acontece fisicamente se uma equipe montar os dois sensores muito próximos entre si (por exemplo, a apenas 0,8 cm de distância)?",
+    options: [
+      { text: "Em trechos retos, ambos os sensores ficarão simultaneamente sobre a própria linha preta, fazendo o robô interpretar falsamente que atingiu a faixa de chegada/parada e interrompendo o percurso logo após a largada.", correct: true },
+      { text: "Os dois LEDs emissores infravermelhos entrarão em ressonância óptica e queimarão os resistores limitadores de corrente dos módulos.", correct: false },
+      { text: "O Arduino Uno não conseguirá ler D2 e D3 no mesmo ciclo de clock, dobrando a velocidade do motor direito.", correct: false },
+      { text: "O robô fará curvas de 90 graus perfeitas sem precisar de controle PWM nos pinos ENA e ENB.", correct: false }
+    ],
+    explanation: "Na configuração em que ambos os sensores cavalgam a linha (lendo branco na reta e acionando parada quando ambos leem preto simultaneamente), a distância entre eles deve ser maior que a largura da linha (2 a 4 cm, conforme Etapa 1.7). Se ficarem mais estreitos que a linha, ambos lerão preto na reta e o robô parará imediatamente.",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 1.7 e 3.1"
+  },
+  {
+    id: 19,
+    domain: "Regras & Comparação de Modalidades",
+    difficulty: "DIFÍCIL",
+    text: "Muitas equipes participam de múltiplas modalidades do Salão de Robótica PR 2026 (como Cabo de Guerra e Segue Linha) usando o mesmo kit base 2WD com Arduino Uno e Ponte H L298N. Quais são as TRÊS diferenças estruturais/elétricas obrigatórias ao converter o robô do Cabo de Guerra para o Segue Linha conforme os Manuais 2026?",
+    options: [
+      { text: "(1) Adicionar 2 sensores IR na parte frontal a 5–10 mm do solo ligados em D2 e D3; (2) Remover os jumpers ENA/ENB e ligá-los às portas PWM D10 e D5; (3) Alterar os pinos de direção IN1–IN4 para D9, D8, D7 e D6.", correct: true },
+      { text: "(1) Substituir as baterias 18650 por pilhas AAA; (2) Manter os jumpers ENA/ENB instalados; (3) Ligar os sensores IR nas portas analógicas A0 e A1.", correct: false },
+      { text: "(1) Instalar um sensor ultrassônico HC-SR04 na traseira; (2) Inverter +12V e GND da Ponte H; (3) Usar apenas 1 motor DC para reduzir o peso.", correct: false },
+      { text: "(1) Fixar os sensores IR a 5 cm de altura; (2) Ligar IN1–IN4 em D8, D7, D5 e D4; (3) Remover o regulador 5V do Arduino.", correct: false }
+    ],
+    explanation: "Comparando os dois manuais oficiais 2026: no Segue Linha adicionam-se os 2 sensores IR (D2 e D3), removem-se os jumpers ENA/ENB para usar PWM (D10 e D5) e a pinagem de controle muda para IN1→D9, IN2→D8, IN3→D7 e IN4→D6.",
+    source: "Manual do Robô Segue Linha 2026 — Etapas 01 e 02"
+  },
+  {
+    id: 20,
+    domain: "Regras & Tomada de Decisão em Torneio",
+    difficulty: "MUITO DIFÍCIL",
+    text: "No Round 2, sua equipe já conquistou Saída Válida (+10 pts), Checkpoint 1 na 1ª tentativa (+30 pts) e Checkpoint 2 na 1ª tentativa (+40 pts). Na aproximação do Checkpoint 3, o robô escapa da linha aos 16 segundos de prova. A equipe tem a opção de reposicionar para a 2ª tentativa do Checkpoint 3 (que vale +40 pts em vez de +50 pts), mas isso fará o tempo total passar de 20 segundos (caindo da faixa de bônus <20s [+50 pts] para a faixa <40s [+30 pts]). Comparando passar o CP3 na 2ª tentativa + Chegada em 25s versus falhar o CP3 e ir direto para a Chegada em 19s, qual é o impacto matemático na pontuação?",
+    options: [
+      { text: "Completar o CP3 na 2ª tentativa (+40 pts) + Chegada (+50 pts) + Bônus <40s (+30 pts) rende 200 pontos totais — 20 pontos a mais do que pular o CP3 (0 pts) + Chegada (+50 pts) + Bônus <20s (+50 pts), que renderia 180 pontos.", correct: true },
+      { text: "É sempre mais vantajoso ignorar o Checkpoint 3 para garantir o bônus máximo de tempo abaixo de 20 segundos (+50 pts), atingindo 230 pontos.", correct: false },
+      { text: "Ao realizar uma 2ª tentativa em qualquer checkpoint, a equipe perde automaticamente o direito a qualquer bônus de tempo (mesmo abaixo de 40 segundos).", correct: false },
+      { text: "Ambas as estratégias resultam exatamente nos mesmos 190 pontos finais no Pontuador Segue Linha SEED-PR.", correct: false }
+    ],
+    explanation: "Cálculo exato pelo Pontuador SEED-PR: Base até CP2 = 10 + 30 + 40 = 80 pts. Cenário A (CP3 na 2ª tentativa = +40, Chegada = +50, Tempo 25s [<40s] = +30): 80 + 40 + 50 + 30 = 200 pontos. Cenário B (CP3 Não Concluiu = 0, Chegada = +50, Tempo 19s [<20s] = +50): 80 + 0 + 50 + 50 = 180 pontos. Superar o Checkpoint 3 na 2ª tentativa vale +20 pontos líquidos a mais!",
+    source: "Pontuador e Regras do Torneio Segue Linha SEED-PR — Páginas 1 e 2"
+  }
+];
+
+// Estado da aplicação
+let state = {
+  studentName: "",
+  teamName: "",
+  studentRole: "",
+  currentIndex: 0,
+  score: 0,
+  timeLeft: 30 * 60,
+  timerInterval: null,
+  questions: [],
+  answers: [],
+  answeredCurrent: false
+};
+
+// Embaralhamento Fisher-Yates
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz() {
+  const nameInput = document.getElementById("student-name").value.trim();
+  const teamInput = document.getElementById("team-name").value.trim();
+  const roleInput = document.getElementById("student-role").value;
+
+  if (!nameInput || !teamInput) {
+    alert("Por favor, preencha o Nome Completo do Estudante e o Nome da Equipe/Robô para gerar o laudo.");
+    return;
+  }
+
+  state.studentName = nameInput;
+  state.teamName = teamInput;
+  state.studentRole = roleInput;
+  state.currentIndex = 0;
+  state.score = 0;
+  state.timeLeft = 30 * 60;
+  state.answers = [];
+  state.answeredCurrent = false;
+
+  state.questions = QUESTIONS_DB.map(q => ({
+    ...q,
+    shuffledOptions: shuffleArray(q.options)
+  }));
+
+  document.getElementById("screen-intro").classList.remove("active");
+  document.getElementById("screen-quiz").classList.add("active");
+  document.getElementById("hud-bar").style.display = "flex";
+
+  buildNavDots();
+  renderQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerDisplay();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      finishQuiz(true);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const mins = Math.floor(state.timeLeft / 60);
+  const secs = state.timeLeft % 60;
+  const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  document.getElementById("hud-timer").textContent = formatted;
+
+  const pill = document.getElementById("timer-pill");
+  if (state.timeLeft <= 300) {
+    pill.classList.add("timer-warning");
+  } else {
+    pill.classList.remove("timer-warning");
+  }
+}
+
+function buildNavDots() {
+  const container = document.getElementById("q-nav-dots");
+  container.innerHTML = "";
+  for (let i = 0; i < state.questions.length; i++) {
+    const dot = document.createElement("div");
+    dot.className = "nav-dot" + (i === 0 ? " active" : "");
+    dot.id = `nav-dot-${i}`;
+    dot.textContent = String(i + 1).padStart(2, '0');
+    container.appendChild(dot);
+  }
+}
+
+function renderQuestion() {
+  const q = state.questions[state.currentIndex];
+  state.answeredCurrent = false;
+
+  const numStr = String(state.currentIndex + 1).padStart(2, '0');
+  document.getElementById("hud-progress").textContent = `${numStr}/${state.questions.length}`;
+  document.getElementById("hud-score").textContent = `${state.score} pts`;
+  document.getElementById("q-counter").textContent = `QUESTÃO ${numStr} DE ${state.questions.length}`;
+  document.getElementById("q-domain-label").textContent = q.domain.toUpperCase();
+
+  const diffBadge = document.getElementById("q-diff-label");
+  diffBadge.textContent = q.difficulty;
+  diffBadge.className = "difficulty-badge " + (q.difficulty === "MUITO DIFÍCIL" ? "diff-extreme" : "diff-hard");
+
+  const pct = ((state.currentIndex + 1) / state.questions.length) * 100;
+  document.getElementById("progress-fill").style.width = `${pct}%`;
+
+  document.getElementById("q-text").textContent = q.text;
+  const codeBox = document.getElementById("q-code");
+  if (q.code) {
+    codeBox.textContent = q.code;
+    codeBox.style.display = "block";
+  } else {
+    codeBox.style.display = "none";
+  }
+
+  const optContainer = document.getElementById("options-container");
+  optContainer.innerHTML = "";
+  const letters = ["A", "B", "C", "D"];
+
+  q.shuffledOptions.forEach((opt, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.innerHTML = `
+      <span class="option-letter">${letters[idx]}</span>
+      <span>${opt.text}</span>
+    `;
+    btn.onclick = () => selectOption(idx, btn);
+    optContainer.appendChild(btn);
+  });
+
+  const fbBox = document.getElementById("feedback-box");
+  fbBox.className = "feedback-box";
+  fbBox.style.display = "none";
+
+  const btnNext = document.getElementById("btn-next");
+  btnNext.disabled = true;
+  btnNext.textContent = state.currentIndex === state.questions.length - 1
+    ? "Finalizar & Gerar Laudo →"
+    : "Próxima Questão →";
+
+  document.getElementById("action-hint").textContent = "Selecione uma alternativa para validar sua resposta.";
+
+  document.querySelectorAll(".nav-dot").forEach((d, i) => {
+    d.classList.remove("active");
+    if (i === state.currentIndex) d.classList.add("active");
+  });
+}
+
+function selectOption(selectedIdx, btnElement) {
+  if (state.answeredCurrent) return;
+  state.answeredCurrent = true;
+
+  const q = state.questions[state.currentIndex];
+  const chosenOption = q.shuffledOptions[selectedIdx];
+  const correctOption = q.shuffledOptions.find(o => o.correct);
+  const allBtns = document.querySelectorAll(".option-btn");
+
+  allBtns.forEach((btn, idx) => {
+    btn.disabled = true;
+    if (q.shuffledOptions[idx].correct) {
+      btn.classList.add("correct");
+    } else if (idx === selectedIdx && !chosenOption.correct) {
+      btn.classList.add("wrong");
+    }
+  });
+
+  const isCorrect = chosenOption.correct;
+  if (isCorrect) {
+    state.score += 50;
+    document.getElementById("hud-score").textContent = `${state.score} pts`;
+  }
+
+  const dot = document.getElementById(`nav-dot-${state.currentIndex}`);
+  dot.classList.add(isCorrect ? "done-ok" : "done-err");
+
+  state.answers.push({
+    number: state.currentIndex + 1,
+    domain: q.domain,
+    questionText: q.text,
+    selectedText: chosenOption.text,
+    correctText: correctOption.text,
+    isCorrect: isCorrect,
+    explanation: q.explanation,
+    source: q.source
+  });
+
+  const fbBox = document.getElementById("feedback-box");
+  fbBox.className = "feedback-box visible " + (isCorrect ? "is-correct" : "is-wrong");
+  document.getElementById("feedback-title").textContent = isCorrect
+    ? "✓ DIAGNÓSTICO CORRETO (+50 PTS)"
+    : "✕ FALHA TÉCNICA IDENTIFICADA (0 PTS)";
+  document.getElementById("feedback-text").textContent = q.explanation;
+  document.getElementById("feedback-source").textContent = "Referência: " + q.source;
+  fbBox.style.display = "block";
+
+  document.getElementById("btn-next").disabled = false;
+  document.getElementById("action-hint").textContent = "Leia o comentário técnico antes de avançar.";
+}
+
+function nextQuestion() {
+  if (state.currentIndex < state.questions.length - 1) {
+    state.currentIndex++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    finishQuiz(false);
+  }
+}
+
+function finishQuiz(byTimeout) {
+  clearInterval(state.timerInterval);
+
+  if (byTimeout) {
+    for (let i = state.answers.length; i < state.questions.length; i++) {
+      const q = state.questions[i];
+      const correctOption = q.shuffledOptions.find(o => o.correct);
+      state.answers.push({
+        number: i + 1,
+        domain: q.domain,
+        questionText: q.text,
+        selectedText: "Não respondida (Tempo esgotado)",
+        correctText: correctOption.text,
+        isCorrect: false,
+        explanation: q.explanation,
+        source: q.source
+      });
+    }
+  }
+
+  document.getElementById("screen-quiz").classList.remove("active");
+  document.getElementById("hud-bar").style.display = "none";
+  document.getElementById("screen-report").classList.add("active");
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  renderReport(byTimeout);
+}
+
+function renderReport(byTimeout) {
+  const totalQ = state.questions.length;
+  const hits = state.answers.filter(a => a.isCorrect).length;
+  const accuracy = Math.round((hits / totalQ) * 100);
+  const elapsedSecs = (30 * 60) - Math.max(0, state.timeLeft);
+  const elMins = Math.floor(elapsedSecs / 60);
+  const elSecs = elapsedSecs % 60;
+  const timeFormatted = `${String(elMins).padStart(2, '0')}:${String(elSecs).padStart(2, '0')}`;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  document.getElementById("rep-name").textContent = state.studentName;
+  document.getElementById("rep-details").textContent = `Equipe/Robô: ${state.teamName} • Função: ${state.studentRole} • Concluído em ${dateStr}${byTimeout ? " (Encerrado por Tempo)" : ""}`;
+
+  document.getElementById("rep-score").textContent = state.score;
+  document.getElementById("rep-accuracy").textContent = `${accuracy}%`;
+  document.getElementById("rep-hits").textContent = `${hits}/${totalQ}`;
+  document.getElementById("rep-time").textContent = timeFormatted;
+
+  const stamp = document.getElementById("rep-stamp");
+  if (accuracy >= 80) {
+    stamp.className = "readiness-stamp stamp-approved";
+    stamp.innerHTML = "HOMOLOGADO PARA PISTA<br><span style='font-size:0.75rem; font-weight:500;'>Prontidão Técnica de Elite</span>";
+  } else if (accuracy >= 60) {
+    stamp.className = "readiness-stamp stamp-warning";
+    stamp.innerHTML = "APROVADO COM RESSALVAS<br><span style='font-size:0.75rem; font-weight:500;'>Revisar Calibração & Código antes do Round 1</span>";
+  } else {
+    stamp.className = "readiness-stamp stamp-rejected";
+    stamp.innerHTML = "RETIDO NA INSPEÇÃO<br><span style='font-size:0.75rem; font-weight:500;'>Necessário Reestudo do Manual & Pontuador</span>";
+  }
+
+  const domainMap = {};
+  state.answers.forEach(a => {
+    let axis = "Eletrônica, PWM & Sensores IR";
+    if (a.domain.includes("Programação") || a.domain.includes("Prompts") || a.domain.includes("Lógica")) axis = "Programação C++ & Lógica IR";
+    else if (a.domain.includes("Mecânica") || a.domain.includes("Geometria") || a.domain.includes("Diagnóstico")) axis = "Mecânica & Geometria de Chassi";
+    else if (a.domain.includes("Regras") || a.domain.includes("Pontuador")) axis = "Regras & Pontuador SEED-PR";
+
+    if (!domainMap[axis]) domainMap[axis] = { total: 0, hits: 0 };
+    domainMap[axis].total++;
+    if (a.isCorrect) domainMap[axis].hits++;
+  });
+
+  const barsContainer = document.getElementById("domain-bars");
+  barsContainer.innerHTML = "";
+  Object.keys(domainMap).forEach(axis => {
+    const d = domainMap[axis];
+    const pct = Math.round((d.hits / d.total) * 100);
+    let color = "var(--accent-emerald)";
+    if (pct < 50) color = "var(--accent-rose)";
+    else if (pct < 80) color = "var(--accent-amber)";
+
+    barsContainer.innerHTML += `
+      <div class="domain-bar-item">
+        <div class="domain-bar-top">
+          <span>${axis}</span>
+          <span style="color:${color}; font-family:'JetBrains Mono', monospace;">${d.hits}/${d.total} (${pct}%)</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill" style="width:${pct}%; background:${color};"></div>
+        </div>
+      </div>
+    `;
+  });
+
+  const revList = document.getElementById("review-list");
+  revList.innerHTML = "";
+  state.answers.forEach(a => {
+    revList.innerHTML += `
+      <div class="review-item ${a.isCorrect ? 'rev-ok' : 'rev-err'}">
+        <div class="review-q-title">
+          ${a.isCorrect ? '✅' : '❌'} Questão ${String(a.number).padStart(2, '0')} [${a.domain}]: ${a.questionText}
+        </div>
+        <div class="review-ans">
+          <strong>Sua resposta:</strong> ${a.selectedText}
+        </div>
+        ${!a.isCorrect ? `<div class="review-ans" style="color: var(--accent-emerald);"><strong>Gabarito oficial:</strong> ${a.correctText}</div>` : ''}
+        <div class="review-exp">
+          <strong>Parecer Técnico:</strong> ${a.explanation} <br>
+          <span style="font-size:0.78rem; color:var(--text-secondary);">[${a.source}]</span>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function exportReportTxt() {
+  const hits = state.answers.filter(a => a.isCorrect).length;
+  const accuracy = Math.round((hits / state.questions.length) * 100);
+  let txt = `====================================================================
+`;
+  txt += `ROBOT ARENA 2026 - LAUDO DE HOMOLOGAÇÃO SEGUE LINHA SEED-PR
+`;
+  txt += `====================================================================
+`;
+  txt += `Estudante: ${state.studentName}
+`;
+  txt += `Equipe/Robô: ${state.teamName}
+`;
+  txt += `Função: ${state.studentRole}
+`;
+  txt += `Pontuação: ${state.score} / 1000 pts (${accuracy}% de aproveitamento)
+`;
+  txt += `Acertos: ${hits} de ${state.questions.length} questões
+`;
+  txt += `====================================================================
+
+`;
+
+  state.answers.forEach(a => {
+    txt += `QUESTÃO ${String(a.number).padStart(2, '0')} (${a.domain}) - ${a.isCorrect ? '[ACERTO]' : '[ERRO]'}
+`;
+    txt += `Enunciado: ${a.questionText}
+`;
+    txt += `Resposta marcada: ${a.selectedText}
+`;
+    if (!a.isCorrect) txt += `Gabarito correto: ${a.correctText}
+`;
+    txt += `Comentário: ${a.explanation} (${a.source})
+`;
+    txt += `--------------------------------------------------------------------
+`;
+  });
+
+  const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  const safeName = state.studentName.replace(/[^a-zA-Z0-9]/g, "_");
+  link.download = `ROBOT_ARENA_2026_SegueLinha_${safeName}.txt`;
+  link.click();
+}
+</script>
+</body>
+</html>
